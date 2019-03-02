@@ -38,8 +38,10 @@ app.get( '/', function( req, res ) {
 
 io.on( 'connection', function( socket ) {
 
-    if( !globalContext.connectedUsers.hasOwnProperty( socket ) ) {
-        globalContext.connectedUsers[socket] = new User( socket );
+    let socket_id = socket.request.connection.remoteAddress;
+
+    if( !globalContext.connectedUsers.hasOwnProperty( socket_id ) ) {
+        globalContext.connectedUsers[socket_id] = new User( socket );
         console.log( 'new connection from ' + socket.request.connection.remoteAddress );
         io.emit( 'message', "Welcome friend from " + socket.request.connection.remoteAddress );
     }
@@ -53,7 +55,7 @@ io.on( 'connection', function( socket ) {
         try {
             let isCommand = false;
             let parsers = globalContext.parsers;
-            var user = globalContext.connectedUsers[socket];
+            var user = globalContext.connectedUsers[socket_id];
             for(let i in parsers) {
                 if( parsers[i].parse( msg, user ) ) {
                     isCommand = true;
@@ -61,7 +63,7 @@ io.on( 'connection', function( socket ) {
                 }
             }
             if( !isCommand ) {
-                let user = globalContext.connectedUsers[socket];
+                let user = globalContext.connectedUsers[socket_id];
                 io.emit( 'message', user.nickname + ": " + msg );
             }
         } catch( e ) { 
