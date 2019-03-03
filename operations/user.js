@@ -1,10 +1,10 @@
 const dbops = require('../shared/dbconn.js')('chatroom');
 const crypto = require('crypto');
 
-const hash = crypto.createHash('sha256');
 salt_suffix = "-development";
 
 function hashSecret(secret) {
+    const hash = crypto.createHash('sha256');
     hash.update(secret + salt_suffix);
     return hash.digest('hex');
 }
