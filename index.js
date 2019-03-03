@@ -143,7 +143,7 @@ io.on('connection', function (socket) {
                 io.emit('message', user.nickname + ": " + msg);
                 messageCache.push(user.nickname + ": " + msg);
                 if(messageCache.length >= globalContext.messageCacheLines) {
-                    messageCache = messageCache.shift();
+                    messageCache.shift();
                 }
                 messageToDump.push(user.nickname + ": " + msg);
                 if(messageToDump.length > globalContext.singleFileMessageLimit) {
