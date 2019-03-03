@@ -56,19 +56,17 @@
                 });
 
                 socket.on('sync_history', function(msg) {
-                    console.log("syncing history");
-                    let msgList = JSON.parse(msg);
                     if($("#messages").children().length == 0) {
-                        for(let i in msgList) {
-                            $('#messages').append($('<li>').text(msgList[i]));
+                        for(let i in msg) {
+                            $('#messages').append($('<li>').text(msg[i]));
                         }
                     } else {
                         let oldFirst = $('#messages').children()[0];
-                        for(let i in msgList) {
-                            ($('<li>').text(msgList[i])).insertBefore(oldFirst);
+                        for(let i in msg) {
+                            ($('<li>').text(msg[i])).insertBefore(oldFirst);
                         }
                     }
-
+                    $('#messages').animate({ scrollTop: $('#messages')[0].scrollHeight }, 100);
                 });
             });
         </script>

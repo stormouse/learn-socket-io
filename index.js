@@ -86,17 +86,19 @@ class User {
 const globalContext = {
     parsers: [defaultParser],
     connectedUsers: {},
+    messageCacheLines: 40,
     singleFileMessageLimit: 100,
 }
 
 var messageCache = [];
+var messageToDump = [];
 var latestMessageHistory = null;
 function dumpMessage() {
     latestMessageHistory = "history/message_"+new Date().getTime()+".txt";
-    fs.writeFile(latestMessageHistory, JSON.stringify(messageCache), function(err) {
+    fs.writeFile(latestMessageHistory, JSON.stringify(messageToDump), function(err) {
         if(err) console.log(err);
         else console.log('file saved');
-        messageCache = [];
+        messageToDump = [];
     });
 }
 
@@ -109,20 +111,13 @@ io.on('connection', function (socket) {
     let socket_id = JSON.stringify(socket.request.connection._peername);
 
     if (!globalContext.connectedUsers.hasOwnProperty(socket_id)) {
-        globalContext.connectedUsers[socket_id] = new User(socket);
-        console.log('new connection from ' + socket.request.connection.remoteAddress);
-        io.emit('message', "Welcome friend from " + socket.request.connection.remoteAddress);
-        console.log(latestMessageHistory);
-        if(latestMessageHistory != null) {
-            fs.readFile(latestMessageHistory, 'utf8', function(err, data) {
-                if(err) console.log(err);
-                else { 
-                    console.log(data);
-                    socket.emit('sync_history', data);
-                    console.log("sync history");
-                }
-
-            });
+        try {
+            globalContext.connectedUsers[socket_id] = new User(socket);
+            console.log('new connection from ' + socket.request.connection.remoteAddress);
+            io.emit('message', "Welcome friend from " + socket.request.connection.remoteAddress);
+            socket.emit('sync_history', messageCache);
+        } catch(e) {
+            console.log("error when establishing new connection.");
         }
     }
 
@@ -147,7 +142,11 @@ io.on('connection', function (socket) {
                 let user = globalContext.connectedUsers[socket_id];
                 io.emit('message', user.nickname + ": " + msg);
                 messageCache.push(user.nickname + ": " + msg);
-                if(messageCache.length > globalContext.singleFileMessageLimit) {
+                if(messageCache.length >= globalContext.messageCacheLines) {
+                    messageCache = messageCache.shift();
+                }
+                messageToDump.push(user.nickname + ": " + msg);
+                if(messageToDump.length > globalContext.singleFileMessageLimit) {
                     dumpMessage();
                 }
             }
