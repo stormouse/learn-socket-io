@@ -33,3 +33,12 @@ security:
 - Restart mongod service
 - Login mongodb with `mongo -u developer -p`
 
+
+
+## Configure Node.js
+
+- Install npm
+- Navigate to the cloned project directory, run `npm install`
+- Navigate to dbutil, run `node create_user_collection.js` (make sure you already have mongoDB ready)
+- Back to the project directory, use `node index.js` to run the project
+- Open http://localhost:8080/ in your browser to check it out!
