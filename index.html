@@ -47,6 +47,29 @@
                     $('#messages').append($('<li>').text(msg));
                     $('#messages').animate({ scrollTop: $('#messages')[0].scrollHeight }, 100);
                 });
+
+                socket.on('system_notification', function(msg){
+                    let li = $('<li>').text(msg);
+                    li.css("background", "#F2836D");
+                    $('#messages').append(li);
+                    $('#messages').animate({ scrollTop: $('#messages')[0].scrollHeight }, 100);
+                });
+
+                socket.on('sync_history', function(msg) {
+                    console.log("syncing history");
+                    let msgList = JSON.parse(msg);
+                    if($("#messages").children().length == 0) {
+                        for(let i in msgList) {
+                            $('#messages').append($('<li>').text(msgList[i]));
+                        }
+                    } else {
+                        let oldFirst = $('#messages').children()[0];
+                        for(let i in msgList) {
+                            ($('<li>').text(msgList[i])).insertBefore(oldFirst);
+                        }
+                    }
+
+                });
             });
         </script>
     </body>
