@@ -10,7 +10,7 @@ const operations = {
 
 const defaultParser = {
     use_nickname_command_re: /^#nickname:\s*(\w+)\s+([A-Za-z0-9\w]+)$/,
-    change_nickname_command_re: /^#nickname:\s*(\w+)$/,
+    change_nickname_command_re: /^#nickname:\s*(\w+)\s*$/,
     create_passcode_command_re: /^#set_pw:\s*([A-Za-z0-9\w]+)$/,
     valid_nickname_re: /^\w+$/,
     parse: function (message, user) {
@@ -22,6 +22,7 @@ const defaultParser = {
                     .then(function() {
                         user.setNickname(nickname);
                         user.socket.emit("system_notification", "You have changed your nickname to " + nickname);
+                        user.socket.emit("nickname_set", JSON.stringify({name: nickname, password: password}));
                     })
                     .catch(function(err){
                         user.socket.emit("system_notification", "Failed to change nickname: " + err);
@@ -38,6 +39,7 @@ const defaultParser = {
                     .then(function(){
                         user.setNickname(nickname);
                         user.socket.emit("system_notification", "You have changed your nickname to " + nickname);
+                        user.socket.emit("nickname_set", JSON.stringify({name: nickname, password: ""}));
                     })
                     .catch(function(err){
                         user.socket.emit("system_notification", "Failed to change nickname: " + err);
@@ -49,13 +51,14 @@ const defaultParser = {
             }
             if((captured = this.create_passcode_command_re.exec(message)) != null) {
                 try {
-                    let nickname = captured[1];
+                    let password = captured[1];
                     if(this.valid_nickname_re.exec(user.nickname) == null) {
                         user.socket.emit("system_notification", "You must have a valid nickname before creating credential for it.")
                     } else {       
-                        operations.user.addUserCredential(user.nickname, nickname)
+                        operations.user.addUserCredential(user.nickname, password)
                         .then( function(){
-                            user.socket.emit("system_notification", "Credential updated!"); 
+                            user.socket.emit("system_notification", "Credential updated!");
+                            user.socket.emit("nickname_set", JSON.stringify({name: user.nickname, password: password}));
                         })
                         .catch(function(err) {
                             user.socket.emit("system_notification", "Credential update failed: " + err); 
