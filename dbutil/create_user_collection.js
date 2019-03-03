@@ -9,8 +9,8 @@ mongo.connect(url, option, function(err, client){
     if(err) throw err;
     const db = client.db('chatroom');
     db.createCollection("users", function(err, res){
-        if(err) throw err;
-        console.log("created collection: chatroom.users");
+        client.close();
+        if(err) console.log(err);
+        else console.log("created collection: chatroom.users");
     })
-    client.close();
 });
