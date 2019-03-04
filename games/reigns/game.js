@@ -1,5 +1,7 @@
 const dbops = require('../../shared/dbconn.js')('reigns');
 
+var _reign_game_instance = null;
+
 module.exports = class Game {
     constructor(callbacks, maxVoteCount, timeForRoundAfterFirstVote = 30) {
         this.reignState = {
@@ -8,6 +10,8 @@ module.exports = class Game {
             people: 10,
             religion: 10,
         };
+
+        _reign_game_instance = this;
 
         this.round = 0;
         this.briefHistory = [];
@@ -25,14 +29,14 @@ module.exports = class Game {
     }
 
     start() {
-        var self = this;
+        console.log("start called");
         this.waitingForAction = false;
         this.briefHistory = [];
         Promise.all([
-            new Promise(_prLoadStories),
+            new Promise(this._prLoadStories),
         ])
-        .then(function() {
-            step_callback(self._step());
+        .then(function(result) {
+            _reign_game_instance.step_callback(_reign_game_instance._step());
         })
         .catch((err) => {
             console.log("Error starting Reigns: " + err);
@@ -40,16 +44,18 @@ module.exports = class Game {
     }
 
     vote(playerName, action) {
+        console.log("ReignGame.vote()");
+        
         let result = {status:'', message:''};
-        if(action === "none") {
+        if(action == "none") {
             result.status = 'error';
             result.message = 'require an action to continue';
-            vote_callback(result);
+            this.vote_callback(result);
         }
-        if(action !== this.currentStory._A.name && action !== this.currentStory._B.name) {
+        if(action != this.currentStory._A.name && action != this.currentStory._B.name) {
             result.status = 'error';
             result.message = "invalid action, only accept '" + this.currentStory._A.name + "' or '" + this.currentStory._B.name + "'.";
-            vote_callback(result);
+            this.vote_callback(result);
         }
 
         this.votes[playerName] = action;
@@ -60,11 +66,11 @@ module.exports = class Game {
             this.step();
             result.status = 'accepted';
             result.message = '[FINAL] ' + this.currentStory._A.name + ": " + this._acount() + ",  " + this.currentStory._B.name + ": " + this._bcount();
-            vote_callback(result);
+            this.vote_callback(result);
         } else {
             result.status = 'accepted';
             result.message = this.currentStory._A.name + ": " + this._acount() + ",  " + this.currentStory._B.name + ": " + this._bcount();
-            vote_callback(result);
+            this.vote_callback(result);
         }
     }
 
@@ -85,6 +91,8 @@ module.exports = class Game {
     }
 
     step() {
+        console.log("ReignGame.step()");
+        
         if(this.hangingVote != null) {
             clearTimeout(this.hangingVote);
             this.hangingVote = null;
@@ -94,20 +102,18 @@ module.exports = class Game {
         let action;
         if(a == b) { action = Math.random() < 0.5 ? this.currentStory._A.name : this.currentStory._B.name; }
         else { action = a > b ? this.currentStory._A.name : this.currentStory._B.name; }
-        step_callback(action, this._step(action));
+        this.step_callback(action, this._step(action));
     }
 
 
     _prLoadStories(resolve, reject) {
-        var self = this; // by-pass js scope
-        dbops(function(db, client){
-            db.stories.find({}).toArray(function(err, result) {
+        dbops((db, client) => {
+            db.collection('stories').find({}).toArray((err, result) => {
                 client.close();
                 if(err) { reject(err) }
                 else if(result == null) { reject("no story in db"); }
                 else {
-                    // filter stories here
-                    self.allStories = result;
+                    _reign_game_instance.allStories = result;
                     resolve();
                 }
             });
@@ -115,6 +121,8 @@ module.exports = class Game {
     }
 
     _step(action = "none") {
+        console.log("ReignGame._step()");
+        
         this.votes = {}; // clear old votes
         let result = { status: '', message: '' }; // result prototype
         if(this.waitingForAction) {
@@ -147,10 +155,13 @@ module.exports = class Game {
     }
 
     _do(action) {
-        this.reignState.army += action._result.army;
-        this.reignState.economy += action._result.economy;
-        this.reignState.people += action._result.people;
-        this.reignState.religion += action._result.religion;
+        console.log("ReignGame._do()");
+        
+        for(let key in action._result) {
+            if(this.reignState.hasOwnProperty(key)){
+                this.reignState[key] += action._result[key];
+            }
+        }
 
         if(this.reignState.army <= 0 || this.reignState.army >= 20) {
             this.gameOverReason = "Your reign fell because you have a way too " + this.reignState.army > 10 ? "powerful" : "weak" + " army.";
@@ -193,7 +204,7 @@ module.exports = class Game {
     _makeReadableStory(story) {
         var obj = {};
         for(let key in story) {
-            if((typeof key) === "string" && key.length > 0) {
+            if((typeof key) == "string" && key.length > 0) {
                 if(key[0] != '_') {
                     obj[key] = story[key];
                 }
@@ -210,10 +221,13 @@ module.exports = class Game {
     }
 
     destroy() {
+        console.log("ReignGame.destroy()");
+
         if(this.hangingVote != null) {
             clearInterval(this.hangingVote);
             this.hangingVote = null;
         }
+        _reign_game_instance = null;
     }
 }
 

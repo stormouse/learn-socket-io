@@ -2,7 +2,7 @@ const app = require('express')();
 const http = require('http').Server(app);
 const io = require('socket.io')(http);
 const fs = require('fs');
-const dbops = require('./shared/dbconn.js')('chatroom');
+// const dbops = require('./shared/dbconn.js')('chatroom');
 
 const reignsCommandParser = require('./games/reigns/parser.js');
 const ReignsGame = require('./games/reigns/game.js');
@@ -21,7 +21,7 @@ const globalContext = {
 const defaultParser = {
     use_nickname_command_re: /^#nickname:\s*(\w+)\s+([A-Za-z0-9\w]+)$/,
     change_nickname_command_re: /^#nickname:\s*(\w+)$/,
-    create_passcode_command_re: /^#set_pw:\s*([A-Za-z0-9\w]+)$/,
+    create_passcode_command_re: /^#set-pw:\s*([A-Za-z0-9\w]+)$/,
     valid_nickname_re: /^\w+$/,
     parse: function (message, user) {
         try{
@@ -77,7 +77,7 @@ const defaultParser = {
                 return true;
             }
 
-            if(message === '#start_game: reigns') {
+            if(message == '#start_game: reigns') {
                 if(!globalContext.parsers.hasOwnProperty('reigns')) {
                     globalContext.parsers['reigns'] = reignsCommandParser;
                     let gameCallbacks = {
@@ -89,14 +89,15 @@ const defaultParser = {
                         globalContext.connectedUsers.length, 
                         30
                     );
+                    reignsCommandParser.gameInstance.start();
                 } else {
                     user.socket.emit("system_notification", "There's one Reigns instance running already.");
                 }
                 return true;
             }
 
-            if(message === '#end_game: reigns') {
-                if(user.nickname !== 'debug') return false;
+            if(message == '#end_game: reigns') {
+                if(user.nickname != 'debug') return false;
                 if(globalContext.parsers.hasOwnProperty('reigns')) {
                     delete globalContext.parsers[''];
                 }
@@ -112,7 +113,6 @@ const defaultParser = {
 }
 
 globalContext.parsers['default'] = defaultParser;
-
 
 class User {
     constructor(socket) {
