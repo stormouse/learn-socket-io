@@ -99,7 +99,7 @@ const defaultParser = {
                             if(action != null) m += "You said '" + action + "'. ";
                             m += "Now: " + JSON.stringify(state);
                             io.emit('game_message', m); 
-                            messageCache.push(user.nickname + ": " + msg);
+                            messageCache.push(m);
                             if(messageCache.length >= globalContext.messageCacheLines) {
                                 messageCache.shift();
                             }
