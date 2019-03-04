@@ -4,8 +4,18 @@ const io = require('socket.io')(http);
 const fs = require('fs');
 const dbops = require('./shared/dbconn.js')('chatroom');
 
+const reignsCommandParser = require('./games/reigns/parser.js');
+const ReignsGame = require('./games/reigns/game.js');
+
 const operations = {
     user: require('./operations/user.js'),
+}
+
+const globalContext = {
+    parsers: {},
+    connectedUsers: {},
+    messageCacheLines: 40,
+    singleFileMessageLimit: 100,
 }
 
 const defaultParser = {
@@ -66,11 +76,43 @@ const defaultParser = {
                 }
                 return true;
             }
+
+            if(message === '#start_game: reigns') {
+                if(!globalContext.parsers.hasOwnProperty('reigns')) {
+                    globalContext.parsers['reigns'] = reignsCommandParser;
+                    let gameCallbacks = {
+                        step: function(state) { io.emit('game_message', '[REIGNS] ' + JSON.stringify(state)); },
+                        vote: function(result) { io.emit('game_message', '[REIGNS] ' + JSON.stringify(result)); },
+                    }
+                    reignsCommandParser.gameInstance = new ReignsGame(
+                        gameCallbacks,
+                        globalContext.connectedUsers.length, 
+                        30
+                    );
+                } else {
+                    user.socket.emit("system_notification", "There's one Reigns instance running already.");
+                }
+                return true;
+            }
+
+            if(message === '#end_game: reigns') {
+                if(user.nickname !== 'debug') return false;
+                if(globalContext.parsers.hasOwnProperty('reigns')) {
+                    delete globalContext.parsers[''];
+                }
+                if(reignsCommandParser.gameInstance != null) {
+                    reignsCommandParser.gameInstance.destroy();
+                    reignsCommandParser.gameInstance = null;
+                }
+            }
         } catch(e) {}
 
         return false;
     },
 }
+
+globalContext.parsers['default'] = defaultParser;
+
 
 class User {
     constructor(socket) {
@@ -82,13 +124,6 @@ class User {
     }
 }
 
-
-const globalContext = {
-    parsers: [defaultParser],
-    connectedUsers: {},
-    messageCacheLines: 40,
-    singleFileMessageLimit: 100,
-}
 
 var messageCache = [];
 var messageToDump = [];

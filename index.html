@@ -48,6 +48,13 @@
                     $('#messages').animate({ scrollTop: $('#messages')[0].scrollHeight }, 100);
                 });
 
+                socket.on('game_message', function(msg) {
+                    let li = $('<li>').text(msg);
+                    li.css("background", "#B5FC74");
+                    $('#messages').append(li);
+                    $('#messages').animate({ scrollTop: $('#messages')[0].scrollHeight }, 100);
+                });
+
                 socket.on('system_notification', function(msg){
                     let li = $('<li>').text(msg);
                     li.css("background", "#F2836D");
