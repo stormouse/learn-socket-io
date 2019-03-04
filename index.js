@@ -86,7 +86,10 @@ const defaultParser = {
                             if(action != null) m += "You said '" + action + "'. ";
                             m += "Now: " + JSON.stringify(state);
                             io.emit('game_message', m); 
-
+                            messageCache.push(user.nickname + ": " + msg);
+                            if(messageCache.length >= globalContext.messageCacheLines) {
+                                messageCache.shift();
+                            }
                             if(state.status == 'game_over') {
                                 reignsCommandParser.gameInstance.dispose();
                                 reignsCommandParser.gameInstance = null;
