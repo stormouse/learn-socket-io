@@ -3,7 +3,7 @@ const dbops = require('../../shared/dbconn.js')('reigns');
 var _reign_game_instance = null;
 
 module.exports = class Game {
-    constructor(callbacks, maxVoteCount, timeForRoundAfterFirstVote = 30) {
+    constructor(callbacks, maxVoteCount, timeForRoundAfterFirstVote = 20) {
         this.reignState = {
             army: 10,
             economy: 10,
@@ -36,7 +36,7 @@ module.exports = class Game {
             new Promise(this._prLoadStories),
         ])
         .then(function(result) {
-            _reign_game_instance.step_callback(_reign_game_instance._step());
+            _reign_game_instance.step_callback(null, _reign_game_instance._step());
         })
         .catch((err) => {
             console.log("Error starting Reigns: " + err);
@@ -44,8 +44,6 @@ module.exports = class Game {
     }
 
     vote(playerName, action) {
-        console.log("ReignGame.vote()");
-        
         let result = {status:'', message:''};
         if(action == "none") {
             result.status = 'error';
@@ -65,11 +63,11 @@ module.exports = class Game {
         if(Object.keys(this.votes).length == this.maxVoteCount) {
             this.step();
             result.status = 'accepted';
-            result.message = '[FINAL] ' + this.currentStory._A.name + ": " + this._acount() + ",  " + this.currentStory._B.name + ": " + this._bcount();
+            result.message = '[FINAL] ' + this.currentStory._A.name + ": " + _reign_game_instance._acount() + ",  " + this.currentStory._B.name + ": " + this._bcount();
             this.vote_callback(result);
         } else {
             result.status = 'accepted';
-            result.message = this.currentStory._A.name + ": " + this._acount() + ",  " + this.currentStory._B.name + ": " + this._bcount();
+            result.message = this.currentStory._A.name + ": " + _reign_game_instance._acount() + ",  " + this.currentStory._B.name + ": " + this._bcount();
             this.vote_callback(result);
         }
     }
@@ -91,18 +89,18 @@ module.exports = class Game {
     }
 
     step() {
-        console.log("ReignGame.step()");
-        
-        if(this.hangingVote != null) {
-            clearTimeout(this.hangingVote);
-            this.hangingVote = null;
+        var self = _reign_game_instance;
+
+        if(self.hangingVote != null) {
+            clearTimeout(self.hangingVote);
+            self.hangingVote = null;
         }
-        let a = this._acount();
-        let b = this._bcount();
+        let a = self._acount();
+        let b = self._bcount();
         let action;
-        if(a == b) { action = Math.random() < 0.5 ? this.currentStory._A.name : this.currentStory._B.name; }
-        else { action = a > b ? this.currentStory._A.name : this.currentStory._B.name; }
-        this.step_callback(action, this._step(action));
+        if(a == b) { action = Math.random() < 0.5 ? self.currentStory._A.name : self.currentStory._B.name; }
+        else { action = a > b ? self.currentStory._A.name : self.currentStory._B.name; }
+        self.step_callback(action, self._step(action));
     }
 
 
@@ -121,8 +119,6 @@ module.exports = class Game {
     }
 
     _step(action = "none") {
-        console.log("ReignGame._step()");
-        
         this.votes = {}; // clear old votes
         let result = { status: '', message: '' }; // result prototype
         if(this.waitingForAction) {
@@ -137,8 +133,9 @@ module.exports = class Game {
                 result.outcome = this._makeReadableState();
                 return result;
             } else {
-                result.status = "gameOver";
+                result.status = "game_over";
                 result.message = this.gameOverReason;
+                result.outcome = this._makeReadableState();
                 this.waitingForAction = false;
                 return result;
             }
@@ -155,9 +152,9 @@ module.exports = class Game {
     }
 
     _do(action) {
-        console.log("ReignGame._do()");
-        
-        for(let key in action._result) {
+        let keys = Object.keys(action._result);
+        for(let i in keys) {
+            let key = keys[i];
             if(this.reignState.hasOwnProperty(key)){
                 this.reignState[key] += action._result[key];
             }
@@ -186,15 +183,17 @@ module.exports = class Game {
     }
 
     _makeReadableState() {
-        let obj = {};
-        for(let item in this.reignState) {
+        var obj = new Object();
+        let keys = Object.keys(this.reignState);
+        for(let i in keys) {
+            let item = keys[i];
             if(this.reignState[item] <= 0 || this.reignState[item] >= 20) {
                 obj[item] = "Out of control";
-            } else if (this.reignState <= 5) {
+            } else if (this.reignState[item] <= 5) {
                 obj[item] = "Barely enough";
-            } else if (this.reignState <= 10) {
+            } else if (this.reignState[item] <= 10) {
                 obj[item] = "Pretty good";
-            } else if (this.reignState <= 15) {
+            } else if (this.reignState[item] <= 15) {
                 obj[item] = "More than enough";
             }
         }
@@ -221,8 +220,6 @@ module.exports = class Game {
     }
 
     destroy() {
-        console.log("ReignGame.destroy()");
-
         if(this.hangingVote != null) {
             clearInterval(this.hangingVote);
             this.hangingVote = null;

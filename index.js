@@ -77,17 +77,27 @@ const defaultParser = {
                 return true;
             }
 
-            if(message == '#start_game: reigns') {
+            if(message == '#start-game: reigns') {
                 if(!globalContext.parsers.hasOwnProperty('reigns')) {
                     globalContext.parsers['reigns'] = reignsCommandParser;
                     let gameCallbacks = {
-                        step: function(state) { io.emit('game_message', '[REIGNS] ' + JSON.stringify(state)); },
+                        step: function(action, state) {
+                            let m = "[REIGNS] ";
+                            if(action != null) m += "You said '" + action + "'. ";
+                            m += "Now: " + JSON.stringify(state);
+                            io.emit('game_message', m); 
+
+                            if(state.status == 'game_over') {
+                                reignsCommandParser.gameInstance.dispose();
+                                reignsCommandParser.gameInstance = null;
+                            }
+                        },
                         vote: function(result) { io.emit('game_message', '[REIGNS] ' + JSON.stringify(result)); },
                     }
                     reignsCommandParser.gameInstance = new ReignsGame(
                         gameCallbacks,
                         globalContext.connectedUsers.length, 
-                        30
+                        20
                     );
                     reignsCommandParser.gameInstance.start();
                 } else {
