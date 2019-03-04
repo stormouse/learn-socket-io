@@ -18,6 +18,19 @@ const globalContext = {
     singleFileMessageLimit: 100,
 }
 
+var messageCache = [];
+var messageToDump = [];
+var latestMessageHistory = null;
+function dumpMessage() {
+    latestMessageHistory = "history/message_"+new Date().getTime()+".txt";
+    fs.writeFile(latestMessageHistory, JSON.stringify(messageToDump), function(err) {
+        if(err) console.log(err);
+        else console.log('file saved');
+        messageToDump = [];
+    });
+}
+
+
 const defaultParser = {
     use_nickname_command_re: /^#nickname:\s*(\w+)\s+([A-Za-z0-9\w]+)$/,
     change_nickname_command_re: /^#nickname:\s*(\w+)$/,
@@ -137,18 +150,6 @@ class User {
     }
 }
 
-
-var messageCache = [];
-var messageToDump = [];
-var latestMessageHistory = null;
-function dumpMessage() {
-    latestMessageHistory = "history/message_"+new Date().getTime()+".txt";
-    fs.writeFile(latestMessageHistory, JSON.stringify(messageToDump), function(err) {
-        if(err) console.log(err);
-        else console.log('file saved');
-        messageToDump = [];
-    });
-}
 
 app.get('/', function (req, res) {
     res.sendFile(__dirname + '/index.html');
