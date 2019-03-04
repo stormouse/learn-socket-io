@@ -104,7 +104,9 @@ const defaultParser = {
                                 messageCache.shift();
                             }
                             if(state.status == 'game_over') {
-                                reignsCommandParser.gameInstance.dispose();
+                                try {
+                                    reignsCommandParser.gameInstance.destroy();
+                                } catch(e) { console.log(e); }
                                 reignsCommandParser.gameInstance = null;
                             }
                         },
