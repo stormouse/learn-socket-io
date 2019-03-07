@@ -35,8 +35,8 @@ security:
 
 
 ## Setup TypeScript
-- Install TypeScript (globally preferred)
-- Install TSLint (again, globally preferred)
+- Install TypeScript with npm (globally preferred: npm i -g typescript)
+- Install TSLint with npm (again, globally preferred: npm i -g tslint)
 - Tryout the command tsc to make sure you are all set
 
 
