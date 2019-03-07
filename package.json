@@ -3,7 +3,7 @@
 	"version": "0.0.1",
 	"description": "my first socket.io app",
 	"scripts": {
-		"start": "tsc; cp ./src/index.html ./dist; node ./dist/app.js",
+		"start": "tsc; cp ./src/index.html ./dist && node ./dist/app.js",
 		"serve": "node ./dist/app.js",
 		"clean": "rm -r dist"
 	},
