@@ -32,7 +32,7 @@ async function parse(message: string, user: User): Promise<boolean> {
 				console.log('nickname', nickname);
 				let result = await UserOperations.checkUserPublic(nickname);
 				if (result.success === true) {
-					user.setNickname(result.message);
+					user.setNickname(nickname);
 					user.socket.emit('system_notification', 'You have changed your nickname to ' + nickname);
 				} else {
 					user.socket.emit('system_notification', 'Failed to change nickname: ' + result.message);
