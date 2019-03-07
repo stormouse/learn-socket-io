@@ -93,8 +93,6 @@ class ChatServer {
 						}
 					}
 					if (!isCommand) {
-						console.log(this.connectedUsers);
-						console.log(socket_id);
 						let user = this.connectedUsers[socket_id];
 						this.io.emit('message', user.nickname + ": " + msg);
 						this.messageCache.push(user.nickname + ": " + msg);

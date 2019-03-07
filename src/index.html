@@ -34,6 +34,17 @@
         <script src="/socket.io/socket.io.js"></script>
         <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
         <script>
+            function initializeNickname(skt) {
+                console.log('initializeNickname');
+                var nicknameStr = localStorage.getItem('nicknameInfo');
+                if (nicknameStr != null) {
+                    var nickname = JSON.parse(nicknameStr);
+                    if (nickname.name != null && nickname.password != null) {
+                        skt.emit('message', '#nickname:' + nickname.name + ' ' + nickname.password);
+                    }
+                }
+            }
+
             $(function() {
                 var socket = io();
                 $('form').submit(function(e){
@@ -75,7 +86,12 @@
                     }
                     $('#messages').animate({ scrollTop: $('#messages')[0].scrollHeight }, 100);
                 });
-            }());
+                socket.on('nickname_set', function(msg) {
+                    localStorage.setItem('nicknameInfo', msg);
+                });
+
+                initializeNickname(socket);
+            });
         </script>
     </body>
 </html>
