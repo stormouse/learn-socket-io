@@ -4,11 +4,6 @@ import { dbconn } from '../shared/dbconn';
 const database = 'chatroom';
 const salt_suffix = '-development';
 
-type UserOperationReturnType = {
-	success: boolean,
-	message?: string
-};
-
 class Result {
 	success = false;
 	message = '';
@@ -18,14 +13,6 @@ class Result {
 		this.message = message;
 	}
 }
-
-let constructResult = (success: boolean, message?: string) => {
-	if (message !== null) {
-		return { success: success, message: message };
-	} else {
-		return { success: success };
-	}
-};
 
 let hashSecret = (secret: string) => {
 	const hash = crypto.createHash('sha256');
