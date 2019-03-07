@@ -1,10 +1,21 @@
 {
-    "name": "learn-socket-io",
-    "version": "0.0.1",
-    "description": "my first socket.io app",
-    "dependencies": {
-        "express": "^4.15.2",
-        "mongodb": "^3.1.13",
-        "socket.io": "^2.2.0"
-    }
+	"name": "learn-socket-io",
+	"version": "0.0.1",
+	"description": "my first socket.io app",
+	"scripts": {
+		"start": "tsc; cp ./src/index.html ./dist && node ./dist/app.js",
+		"serve": "node ./dist/app.js",
+		"clean": "rm -r dist"
+	},
+	"dependencies": {
+		"crypto": "^1.0.1",
+		"express": "^4.16.4",
+		"mongodb": "^3.1.13",
+		"socket.io": "^2.2.0"
+	},
+	"devDependencies": {
+		"@types/express": "^4.16.1",
+		"@types/mongodb": "^3.1.20",
+		"@types/socket.io": "^2.1.2"
+	}
 }
